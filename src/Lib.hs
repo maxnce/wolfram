@@ -1,6 +1,10 @@
 module Lib
-    ( someFunc
+    ( printResult
     ) where
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+import System.Exit (ExitCode (ExitFailure), exitWith)
+
+printResult :: String -> IO ()
+printResult s = do
+    putStrLn s
+    exitWith (ExitFailure 1)
