@@ -111,8 +111,8 @@ stringToRuleComp (x:y:z:zs) = (x:y:[z]) : stringToRuleComp (y:z:zs)
 ruleCompToNextState :: [[Char]] -> RuleDef -> [Char]
 ruleCompToNextState [] _ = []
 ruleCompToNextState (x:xs) rule = case x of
-        "  *" -> (newCell (byte1 rule)) : nextRuleComp
         "   " -> (newCell (byte0 rule)) : nextRuleComp
+        "  *" -> (newCell (byte1 rule)) : nextRuleComp
         " * " -> (newCell (byte2 rule)) : nextRuleComp
         " **" -> (newCell (byte3 rule)) : nextRuleComp
         "*  " -> (newCell (byte4 rule)) : nextRuleComp
@@ -121,14 +121,33 @@ ruleCompToNextState (x:xs) rule = case x of
         "***" -> (newCell (byte7 rule)) : nextRuleComp
     where nextRuleComp = ruleCompToNextState xs rule
 
-wolframEngine :: [Char] -> Args -> RuleDef -> Maybe Int -> IO()
-wolframEngine line args rule (Just 0) = return ()
-wolframEngine line args rule (Just x) = do
-    printLine line (fromJust (window args))
-    wolframEngine (" " ++ ruleCompToNextState (stringToRuleComp line) rule) args rule (Just (x-1))
-wolframEngine line args rule Nothing = do
-    printLine line (fromJust (window args))
-    wolframEngine (" " ++ ruleCompToNextState (stringToRuleComp line) rule) args rule Nothing
+invertRule :: RuleDef -> RuleDef
+invertRule rule = RuleDef {
+    byte0 = RuleCase {setup = (setup (byte0 rule)), newCell = (newCell (byte0 rule))},
+    byte1 = RuleCase {setup = (setup (byte1 rule)), newCell = (newCell (byte4 rule))},
+    byte2 = RuleCase {setup = (setup (byte2 rule)), newCell = (newCell (byte2 rule))},
+    byte3 = RuleCase {setup = (setup (byte3 rule)), newCell = (newCell (byte6 rule))},
+    byte4 = RuleCase {setup = (setup (byte4 rule)), newCell = (newCell (byte1 rule))},
+    byte5 = RuleCase {setup = (setup (byte5 rule)), newCell = (newCell (byte5 rule))},
+    byte6 = RuleCase {setup = (setup (byte6 rule)), newCell = (newCell (byte3 rule))},
+    byte7 = RuleCase {setup = (setup (byte7 rule)), newCell = (newCell (byte7 rule))}
+}
+
+
+wolframEngine :: [Char] -> [Char] -> Args -> RuleDef -> Maybe Int -> IO()
+wolframEngine _ _ _ _ (Just 0) = return ()
+wolframEngine line beforeLine args rule (Just x) = do
+    printLine (tail line) (fromJust (window args))
+    wolframEngine ([neg] ++ (tail (ruleCompToNextState (stringToRuleComp (neg:( line))) rule))) beforeLine' args rule (Just (x-1))
+    where
+        neg = (head (ruleCompToNextState (stringToRuleComp ((head (tail line)):beforeLine)) (invertRule rule)))
+        beforeLine' = ruleCompToNextState (stringToRuleComp ((head (tail line)):beforeLine)) (invertRule rule)
+wolframEngine line beforeLine args rule Nothing = do
+    printLine (tail line) (fromJust (window args))
+    wolframEngine ([neg] ++ (tail (ruleCompToNextState (stringToRuleComp (neg:( line))) rule))) beforeLine' args rule Nothing
+    where
+        neg = (head (ruleCompToNextState (stringToRuleComp ((head (tail line)):beforeLine)) (invertRule rule)))
+        beforeLine' = ruleCompToNextState (stringToRuleComp ((head (tail line)):beforeLine)) (invertRule rule)
 
 
 
@@ -142,4 +161,4 @@ main = do
         _ -> return ()
     wolframLine <- return $ generateDefaultLine
         (fromJust (window (fromJust parsedArgs)))
-    wolframEngine wolframLine (fromJust parsedArgs) (createRule (fromJust parsedArgs)) (Args.lines (fromJust parsedArgs))
+    wolframEngine (' ':wolframLine) (cycle [' ']) (fromJust parsedArgs) (createRule (fromJust parsedArgs)) (Args.lines (fromJust parsedArgs))
