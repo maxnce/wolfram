@@ -88,10 +88,7 @@ verifArgs (Just (Args r s l w m)) = Just (Args r s' l' w' m')
 printLine :: Int -> [Char] -> IO ()
 printLine _ [] = return ()
 printLine 0 _ = putChar '\n'
-printLine n (x : xs) =
-    if n <= 0
-        then return ()
-        else putChar x >> printLine (n - 1) xs
+printLine n line = putStrLn (take n line)
 
 generateDefaultLine :: Int -> [Char]
 generateDefaultLine n = replicate (div n 2) ' ' ++ "*" ++ repeat ' '
@@ -160,6 +157,6 @@ main = do
         _ -> return ()
     let wLine = generateDefaultLine (fromJust (window (fromJust parsedArgs)))
     let wRule = createRule (fromJust parsedArgs)
-    let zTuple = (wLine, repeat ' ')
+    let zTuple = (if fromJust (move (fromJust parsedArgs)) > 0 then replicate (fromJust (move (fromJust parsedArgs))) ' ' ++ wLine else drop (abs (fromJust (move (fromJust parsedArgs)))) wLine, if fromJust (move (fromJust parsedArgs)) > 0 then repeat ' ' else reverse (take (abs (fromJust (move (fromJust parsedArgs)))) wLine) ++ repeat ' ')
     let wGen = if isNothing (Args.lines (fromJust parsedArgs)) then Nothing else Just (fromJust (start (fromJust parsedArgs)) + fromJust (Args.lines (fromJust parsedArgs)))
     mapM_ (printLine (fromJust (window (fromJust parsedArgs)))) (drop (fromJust (start (fromJust parsedArgs))) (uncurry wolframEngine zTuple (fromJust parsedArgs) wRule wGen))
