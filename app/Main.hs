@@ -147,6 +147,15 @@ wolframEngine line beforeLine args rule Nothing =
         (invertRule rule)
     currString =  neg : tail (computeState (strToCase (neg : line)) rule)
 
+createInitialTuple :: [Char] -> Maybe Args -> ([Char], [Char])
+createInitialTuple _ Nothing = ([], [])
+createInitialTuple wLine parsedArgs =
+    (if fromJust (move (fromJust parsedArgs)) > 0 then replicate (
+    fromJust (move (fromJust parsedArgs))) ' ' ++ wLine else drop
+    (abs (fromJust (move (fromJust parsedArgs)))) wLine, if fromJust
+    (move (fromJust parsedArgs)) > 0 then repeat ' ' else reverse (take
+    (abs (fromJust (move (fromJust parsedArgs)))) wLine) ++ repeat ' ')
+
 main :: IO ()
 main = do
     args <- getArgs
@@ -157,6 +166,10 @@ main = do
         _ -> return ()
     let wLine = generateDefaultLine (fromJust (window (fromJust parsedArgs)))
     let wRule = createRule (fromJust parsedArgs)
-    let zTuple = (if fromJust (move (fromJust parsedArgs)) > 0 then replicate (fromJust (move (fromJust parsedArgs))) ' ' ++ wLine else drop (abs (fromJust (move (fromJust parsedArgs)))) wLine, if fromJust (move (fromJust parsedArgs)) > 0 then repeat ' ' else reverse (take (abs (fromJust (move (fromJust parsedArgs)))) wLine) ++ repeat ' ')
-    let wGen = if isNothing (Args.lines (fromJust parsedArgs)) then Nothing else Just (fromJust (start (fromJust parsedArgs)) + fromJust (Args.lines (fromJust parsedArgs)))
-    mapM_ (printLine (fromJust (window (fromJust parsedArgs)))) (drop (fromJust (start (fromJust parsedArgs))) (uncurry wolframEngine zTuple (fromJust parsedArgs) wRule wGen))
+    let zTuple = createInitialTuple wLine parsedArgs
+    let wGen = if isNothing (Args.lines (fromJust parsedArgs)) then Nothing
+        else Just (fromJust (start (fromJust parsedArgs)) +
+            fromJust (Args.lines (fromJust parsedArgs)))
+    mapM_ (printLine (fromJust (window (fromJust parsedArgs))))
+        (drop (fromJust (start (fromJust parsedArgs))) (uncurry wolframEngine
+        zTuple (fromJust parsedArgs) wRule wGen))
