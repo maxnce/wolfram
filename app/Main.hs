@@ -130,46 +130,46 @@ invertRule rule =
 --   printLine (tail line) (fromJust (window args))
 wolframEngine :: [Char] -> [Char] -> Args -> RuleDef -> Maybe Int -> [[Char]]
 wolframEngine _ _ _ _ (Just 0) = []
-wolframEngine line beforeLine args rule (Just n) =
-    line : wolframEngine currString newBLine' args rule (Just (n - 1))
+wolframEngine line beforeLine args rule n =
+    line : wolframEngine currString newBLine' args rule nMinusOne
     where
-    neg = head (computeState
-        (strToCase (head (tail line) : beforeLine)) (invertRule rule))
+    neg = getFirstCharFromBLine line beforeLine rule
     newBLine' = computeState (strToCase (head (tail line) : beforeLine))
         (invertRule rule)
     currString =  neg : tail (computeState (strToCase (neg : line)) rule)
-wolframEngine line beforeLine args rule Nothing =
-    line : wolframEngine currString newBLine' args rule Nothing
-    where
-    neg = head (computeState
-        (strToCase (head (tail line) : beforeLine)) (invertRule rule))
-    newBLine' = computeState (strToCase (head (tail line) : beforeLine))
-        (invertRule rule)
-    currString =  neg : tail (computeState (strToCase (neg : line)) rule)
+    nMinusOne = if isJust n then Just (fromJust n - 1) else Nothing
 
-createInitialTuple :: [Char] -> Maybe Args -> ([Char], [Char])
-createInitialTuple _ Nothing = ([], [])
-createInitialTuple wLine parsedArgs =
-    (if fromJust (move (fromJust parsedArgs)) > 0 then replicate (
-    fromJust (move (fromJust parsedArgs))) ' ' ++ wLine else drop
-    (abs (fromJust (move (fromJust parsedArgs)))) wLine, if fromJust
-    (move (fromJust parsedArgs)) > 0 then repeat ' ' else reverse (take
-    (abs (fromJust (move (fromJust parsedArgs)))) wLine) ++ repeat ' ')
+getFirstCharFromBLine :: [Char] -> [Char] -> RuleDef -> Char
+getFirstCharFromBLine line beforeLine rule =
+    head (computeState
+        (strToCase (head (tail line) : beforeLine)) (invertRule rule))
+
+createInitialTuple :: [Char] -> Args -> ([Char], [Char])
+createInitialTuple wLine args =
+    (if fromJust (move args) > 0 then replicate (
+    fromJust (move args)) ' ' ++ wLine else drop
+    (abs (fromJust (move args))) wLine, if fromJust
+    (move args) > 0 then repeat ' ' else reverse (take
+    (abs (fromJust (move args))) wLine) ++ repeat ' ')
 
 main :: IO ()
 main = do
     args <- getArgs
     let parsedArgs = verifArgs $ parseArgs args createEasyTest
-    case parsedArgs of
-        Nothing ->
-            putStrLn "Error : bad arguments" >> exitWith (ExitFailure 84)
-        _ -> return ()
-    let wLine = generateDefaultLine (fromJust (window (fromJust parsedArgs)))
-    let wRule = createRule (fromJust parsedArgs)
-    let zTuple = createInitialTuple wLine parsedArgs
-    let wGen = if isNothing (Args.lines (fromJust parsedArgs)) then Nothing
-        else Just (fromJust (start (fromJust parsedArgs)) +
-            fromJust (Args.lines (fromJust parsedArgs)))
+    when (isNothing parsedArgs) $ putStrLn "Error : bad arguments"
+        >> exitWith (ExitFailure 84)
     mapM_ (printLine (fromJust (window (fromJust parsedArgs))))
-        (drop (fromJust (start (fromJust parsedArgs))) (uncurry wolframEngine
-        zTuple (fromJust parsedArgs) wRule wGen))
+        (drop (fromJust (start (fromJust parsedArgs)))
+        (getGenerationTable (fromJust parsedArgs)))
+
+
+getGenerationTable :: Args -> [[Char]]
+getGenerationTable args =
+    uncurry wolframEngine zTuple args wRule wGen
+    where
+        wLine = generateDefaultLine (fromJust (window args))
+        wRule = createRule args
+        zTuple = createInitialTuple wLine args
+        wGen = if isNothing (Args.lines args) then Nothing
+            else Just (fromJust (start args) +
+            fromJust (Args.lines args))
