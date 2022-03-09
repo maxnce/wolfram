@@ -1,6 +1,8 @@
 module Rule
     (
-    Cell, RuleCase, RuleDef, createRuleCase, createRule, invertRule, computeState
+    Cell, RuleCase, RuleDef,
+    createRuleCase, createRule,
+    invertRule, computeState
     ) where
 
 import Args
@@ -30,12 +32,10 @@ createRuleCase args n = RuleCase {
     res = if getBit (7 - n) (fillEmptyBits(intToStringBits
         (fromJust (rule args))) 8) == '1' then '*' else ' '}
     where
-        lc = if getBit 0 (fillEmptyBits (intToStringBits n) 3) == '1'
-        then '*' else ' '
-        mc = if getBit 1 (fillEmptyBits (intToStringBits n) 3) == '1'
-        then '*' else ' '
-        rc = if getBit 2 (fillEmptyBits (intToStringBits n) 3) == '1'
-        then '*' else ' '
+        fillBits = fillEmptyBits (intToStringBits n) 3
+        lc = if getBit 0 fillBits == '1' then '*' else ' '
+        mc = if getBit 1 fillBits == '1' then '*' else ' '
+        rc = if getBit 2 fillBits == '1' then '*' else ' '
 
 createRule :: Args -> RuleDef
 createRule args = RuleDef {
@@ -61,19 +61,15 @@ invertRule rule =
         byte7 = RuleCase {setup = setup (byte7 rule), res = res (byte7 rule)}}
 
 computeState :: [[Char]] -> RuleDef -> [Char]
-computeState [] _ = []
-computeState (x : xs) rule = case x of
-    "   " -> res (byte0 rule) : nextRuleComp
-    "  *" -> res (byte1 rule) : nextRuleComp
-    " * " -> res (byte2 rule) : nextRuleComp
-    " **" -> res (byte3 rule) : nextRuleComp
-    "*  " -> res (byte4 rule) : nextRuleComp
-    "* *" -> res (byte5 rule) : nextRuleComp
-    "** " -> res (byte6 rule) : nextRuleComp
-    "***" -> res (byte7 rule) : nextRuleComp
-    _ -> error "Invalid case"
-    where
-        nextRuleComp = computeState xs rule
+computeState ("   " : xs) rule = res (byte0 rule) : computeState xs rule
+computeState ("  *" : xs) rule = res (byte1 rule) : computeState xs rule
+computeState (" * " : xs) rule = res (byte2 rule) : computeState xs rule
+computeState (" **" : xs) rule = res (byte3 rule) : computeState xs rule
+computeState ("*  " : xs) rule = res (byte4 rule) : computeState xs rule
+computeState ("* *" : xs) rule = res (byte5 rule) : computeState xs rule
+computeState ("** " : xs) rule = res (byte6 rule) : computeState xs rule
+computeState ("***" : xs) rule = res (byte7 rule) : computeState xs rule
+computeState _ _ = []
 
 data Ruleb = Ruleb Int Int Int Int Int Int Int Int
 createRuleb :: Ruleb

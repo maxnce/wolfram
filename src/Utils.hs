@@ -15,7 +15,8 @@ intToStringBits n = showIntAtBase 2 intToDigit n ""
 
 fillEmptyBits :: [Char] -> Int -> [Char]
 fillEmptyBits [] x = fillEmptyBits ['0'] x
-fillEmptyBits (x:xs) n = if length (x:xs) < n then fillEmptyBits ('0':(x:xs)) n else x:xs
+fillEmptyBits (x:xs) n = if length (x:xs) < n
+    then fillEmptyBits ('0':(x:xs)) n else x:xs
 
 getBit :: Int -> [Char] -> Char
 getBit _ [] = '0'
