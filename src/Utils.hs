@@ -4,6 +4,8 @@ module Utils
         fillEmptyBits,
         getBit,
         Utils.readInt,
+        printLine,
+        strToCase
     ) where
 
 import Numeric
@@ -28,3 +30,15 @@ readInt string =
     case reads string of
         [(x, "")] -> Just x
         _ -> Nothing
+
+printLine :: Int -> [Char] -> IO ()
+printLine _ [] = return ()
+printLine 0 _ = putChar '\n'
+printLine n line = putStrLn (take n line)
+
+strToCase :: [Char] -> [[Char]]
+strToCase [] = []
+strToCase (x : y : z : zs) =
+    (x : y : [z]) :
+    strToCase (y : z : zs)
+strToCase _ = []

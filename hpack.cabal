@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Args
+      Generation
       Rule
       Utils
   other-modules:

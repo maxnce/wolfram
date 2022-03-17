@@ -21,10 +21,12 @@ all: $(NAME)
 
 clean:
 	@echo "Cleaning"
-	@rm -rf $(SP)
+	@stack clean
 	@echo "Done"
 
 fclean: clean
 	@rm -f $(NAME)
 
 re: fclean all
+
+.PHONY: all clean fclean re
